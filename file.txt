@@ -1,0 +1,28 @@
+Mkdisk -Size->10 -unit->k -path->"home/nido esp" -name->disco.dsk
+Mkdisk -Size->15 -unit->k -path->"home/nido esp" -name->disco2.dsk
+fdisk -Size->1000 -unit->b -type->e -path->"home/nido esp/disco.dsk" -name->particion1
+fdisk -Size->1000 -unit->b -path->"home/nido esp/disco.dsk" -name->jeff
+fdisk -Size->100 -unit->b -path->"home/nido esp/disco.dsk" -name->particion
+fdisk -Size->1000 -unit->b -path->"home/nido esp/disco.dsk" -name->nueva
+fdisk -Size->100 -type->l -unit->b -path->"home/nido esp/disco.dsk" -name->logica1
+fdisk -Size->100 -type->l -unit->b -path->"home/nido esp/disco.dsk" -name->logica2
+fdisk -Size->100 -type->l -unit->b -path->"home/nido esp/disco.dsk" -name->logica3
+mount -path->"home/nido esp/disco.dsk" -name->particion1
+fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->jeff
+fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->particion
+fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->logica3
+rep -id->vda1 -path->"home/user/reports/reporte 2.pdf" -name->disk
+pause
+fdisk -Size->5000 -unit->b -path->"home/nido esp/disco2.dsk" -name->part_1
+fdisk -Size->1000 -unit->b -path->"home/nido esp/disco2.dsk" -name->part_2
+mount -path->"home/nido esp/disco.dsk" -name->jeff
+mount -path->"home/nido esp/disco.dsk" -name->particion
+mount -path->"home/nido esp/disco2.dsk" -name->part_1
+mount -path->"home/nido esp/disco2.dsk" -name->part_2
+mount
+unmount -id1->vdb1
+mount
+unmount -id1->vdb2 -id2->vda1
+mount
+mount -path->"home/nido esp/disco.dsk" -name->nueva
+mount
