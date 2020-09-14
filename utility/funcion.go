@@ -1026,7 +1026,8 @@ func ReporteMBR(id string, path string){
 		grafo=grafo+tr0+"Part_name_"+strconv.Itoa(i)+tr1+string(hdrive.Mbr_partition[i].Part_name[:n])+tr2;
 	}
 	grafo= grafo+"</TABLE>> ];}"
-	f, err := os.Create("test.txt")
+	dot:=strings.ReplaceAll(path,"\"","");
+	f, err := os.Create(strings.ReplaceAll("/"+dot,".png",""))
     if err != nil {
         fmt.Println(err)
         return
