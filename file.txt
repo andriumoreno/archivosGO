@@ -9,9 +9,9 @@ fdisk -Size->100 -type->l -unit->b -path->"home/nido esp/disco.dsk" -name->logic
 fdisk -Size->100 -type->l -unit->b -path->"home/nido esp/disco.dsk" -name->logica3
 mount -path->"home/nido esp/disco.dsk" -name->particion1
 fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->jeff
+fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->nueva
 fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->particion
-fdisk -delete->fast -path->"home/nido esp/disco.dsk" -name->logica3
-rep -id->vda1 -path->"home/user/reports/reporte 2.pdf" -name->disk
+rep -id->vda1 -path->home/fenelchat.png -name->disk
 pause
 fdisk -Size->5000 -unit->b -path->"home/nido esp/disco2.dsk" -name->part_1
 fdisk -Size->1000 -unit->b -path->"home/nido esp/disco2.dsk" -name->part_2

@@ -1,0 +1,7 @@
+digraph test {
+ graph [ratio=fill];
+ node [label="\N", fontsize=15, shape=plaintext];
+ graph [bb="0,0,352,154"];
+ arset [label=<
+ <TABLE ALIGN="LEFT"><TR><TD>MBR</TD><TD><TABLE><TR><TD>particion1 (EXTENDIDA) 9.96%</TD></TR><TR><TD><TABLE><TR><TD>EBR</TD><TD>LOGICA: logica1</TD><TD>EBR</TD><TD>LOGICA: logica2</TD><TD>EBR</TD><TD>LOGICA: logica3</TD><TD>EBR</TD><TD>LIBRE: </TD></TR></TABLE></TD></TR></TABLE></TD><TD>LIBRE<br/> 90.03%</TD></TR></TABLE>> ];
+}

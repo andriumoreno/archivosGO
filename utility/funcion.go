@@ -12,6 +12,8 @@ import (
 	//"bufio"
 	"io"
 	"strconv"
+	"os/exec"
+	"bytes"
 )
 
 const mbrPS int64 = 38;
@@ -215,7 +217,6 @@ func CreatePartition(name string, ruta string, fit byte, ptsize int64, add int64
 		return;
 	}
 	Espace:=checkSpace(offset,x,disk);
-	fmt.Printf(" the start of the partition is: %d \n",Espace);
 	if(Espace==0){
 		fmt.Println("there is no enough space to create the partition");
 		return;
@@ -248,10 +249,7 @@ func CreateLP(file *os.File, lp EPartition,size_l int64){
 		noLP:= findNextL(file,222);
 		if(no==false&&noLP==0){
 			if(E_size>=sizeOfEBR+size_l){
-				fmt.Println("entro aqui 1");
 				lp.Part_start = E_start +sizeOfEBR;
-				fmt.Printf("e_start %d \n",E_start);
-				fmt.Printf("number %d \n",lp.Part_start);
 				file.Seek(ebrst,0);
 				err:=binary.Write(file, binary.LittleEndian, &lp)
 				CheckBR(err);
@@ -266,10 +264,7 @@ func CreateLP(file *os.File, lp EPartition,size_l int64){
 			if(t_next!=0){
 				lp.Part_start = E_start +sizeOfEBR;
 				if(size_l<=t_next-lp.Part_start){
-					fmt.Println("entro aqui 2");
 					lp.Part_start = E_start +sizeOfEBR;
-					fmt.Printf("e_start %d \n",E_start);
-					fmt.Printf("number %d \n",lp.Part_start);
 					file.Seek(ebrst,0);
 					err:=binary.Write(file, binary.LittleEndian, &lp)
 					CheckBR(err);
@@ -280,10 +275,7 @@ func CreateLP(file *os.File, lp EPartition,size_l int64){
 			}else{
 				lp.Part_start = E_start +sizeOfEBR;
 				if(size_l<=noLP-lp.Part_start){
-					fmt.Println("entro aqui 3");
 					lp.Part_start = E_start +sizeOfEBR;
-					fmt.Printf("e_start %d \n",E_start);
-					fmt.Printf("number %d \n",lp.Part_start);
 					file.Seek(ebrst,0);
 					err:=binary.Write(file, binary.LittleEndian, &lp)
 					CheckBR(err);
@@ -296,21 +288,16 @@ func CreateLP(file *os.File, lp EPartition,size_l int64){
 		offset:=LPTAvaliable(file,178);
 		noLP= findNextL(file,offset+44);
 		if(noLP!=0){
-			fmt.Println("entro aqui puta 2");
-			fmt.Println(noLP);
 			readInt:= offset -40;
-			fmt.Printf("f en el chat %d",readInt);
 			var L_start int64;
 			file.Seek(readInt, 0);
 			binary.Read(file, binary.LittleEndian, &L_start)
 			var L_size int64;
 			binary.Read(file, binary.LittleEndian, &L_size)
 			changest:=L_size+L_start;
-			fmt.Printf("the start is: %d the size is: %d",L_start,L_size)
 			file.Seek(0, io.SeekCurrent);
 			binary.Write(file, binary.LittleEndian, &changest)
 			lp.Part_start = changest;  
-			fmt.Printf("the particion start is: %d\n",changest)
 			if(size_l<=noLP-lp.Part_start){
 				file.Seek(offset,0);
 				lp.Part_next=noLP;
@@ -322,17 +309,14 @@ func CreateLP(file *os.File, lp EPartition,size_l int64){
 			return;
 		}else{
 			if(E_size-spaceL(file, 196)>=size_l){
-				fmt.Println("entro aqui puta");
 				offset:=checkLPTAvaliable(file,196);
 				readInt:= offset -40;
-				fmt.Printf("f en el chat %d",readInt);
 				var L_start int64;
 				file.Seek(readInt, 0);
 				binary.Read(file, binary.LittleEndian, &L_start)
 				var L_size int64;
 				binary.Read(file, binary.LittleEndian, &L_size)
 				changest:=L_size+L_start;
-				fmt.Printf("the start is: %d the size is: %d",L_start,L_size)
 				file.Seek(0, io.SeekCurrent);
 				binary.Write(file, binary.LittleEndian, &changest)
 				file.Seek(offset,0);
@@ -453,20 +437,16 @@ func checkSpace(offset int64, size int64, file *os.File)int64{
 		err := binary.Read(file, binary.LittleEndian, &byte_start)
 		CheckBR(err);
 	}
-	fmt.Printf("next_pt: %d \n",next_pt)
 	var space int64 = 0;
 	switch offset {	
     case 38: 	
 		if(next_pt==0){
 			avaliable_space:= dksize-sizeOfMBR+1;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = sizeOfMBR;
-				fmt.Printf(" space %d \n",space);
 			}
 		}else{			
 			avaliable_space:= byte_start-sizeOfMBR;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = sizeOfMBR;
 			}
@@ -480,13 +460,11 @@ func checkSpace(offset int64, size int64, file *os.File)int64{
 		binary.Read(file, binary.LittleEndian, &fp_byte_start);
 		if(next_pt==0){
 			avaliable_space:= dksize-sizeOfMBR-fp_size+1;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = fp_byte_start+fp_size;
 			}
 		}else{			
 			avaliable_space:= byte_start-sizeOfMBR-fp_size;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = fp_byte_start+fp_size;
 			}
@@ -503,13 +481,11 @@ func checkSpace(offset int64, size int64, file *os.File)int64{
 		binary.Read(file, binary.LittleEndian, &sp_byte_start);
 		if(next_pt==0){
 			avaliable_space:= dksize-sizeOfMBR-fp_size-sp_size+1;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = sp_byte_start+sp_size;
 			}
 		}else{			
 			avaliable_space:= byte_start-sizeOfMBR-fp_size-sp_size;
-			fmt.Printf("avaliable space: %d \n",avaliable_space)
 			if(size<=avaliable_space){
 				space = sp_byte_start+sp_size;
 			}
@@ -528,7 +504,6 @@ func checkSpace(offset int64, size int64, file *os.File)int64{
 		file.Seek(mbrPST+70,0);
 		binary.Read(file, binary.LittleEndian, &tp_byte_start);
 		avaliable_space:= dksize-sizeOfMBR-fp_size-sp_size-tp_size+1;
-		fmt.Printf("avaliable space: %d \n",avaliable_space)
 		if(size<=avaliable_space){
 			space = tp_byte_start+tp_size;
     	}
@@ -748,8 +723,6 @@ func removeDk(slice []mount_Dk, s int) []mount_Dk {
 func deletePartition(file *os.File,name string, parametro string){
 	var p_errase[35] byte;
 	var l_errase[42] byte; 
-	fmt.Println("entro aqui: delete partition");
-	fmt.Println(name);
 	var cero byte;
 	cero =0;
 	var cast[16]byte;
@@ -757,15 +730,15 @@ func deletePartition(file *os.File,name string, parametro string){
 	if(parametro=="fast"){
 		exist:=checkName(file,mbrPN,cast);
 		if(exist==true){
-			fmt.Println("particion primaria o extendida");
 			file.Seek( -35, io.SeekCurrent );		
 			er:=binary.Write(file, binary.LittleEndian, &cero)  
 			CheckBR(er);   
-			fmt.Println(file.Seek( 0, io.SeekCurrent ));
+			file.Seek( 0, io.SeekCurrent );
 			var pt_type byte;
 			err := binary.Read(file, binary.LittleEndian, &pt_type)
 			CheckBR(err);
-			fmt.Println(pt_type);
+			fmt.Println(file.Seek( 0, io.SeekCurrent ));
+			fmt.Println(pt_type)
 			if(pt_type=='e'){
 				fi, err := file.Stat()
 				if err != nil {
@@ -777,6 +750,7 @@ func deletePartition(file *os.File,name string, parametro string){
 				err = binary.Write(file, binary.LittleEndian, &errase_l)  
 				CheckBR(err);
 				fmt.Println("particion extendida eliminada exitosamente");
+				return;
 			}		
 			return;
 		}
@@ -784,7 +758,6 @@ func deletePartition(file *os.File,name string, parametro string){
 		if(notL==true){
 			Lname:=checkNamePL(file,196,cast);
 			if(Lname==true){
-				fmt.Println("deleting a logical partition");
 				deleteOffset,fatal:=file.Seek( -42, io.SeekCurrent );
 				if fatal != nil {
 					fmt.Println(fatal);
@@ -818,15 +791,13 @@ func deletePartition(file *os.File,name string, parametro string){
 	}else if(parametro=="full"){
 		exist:=checkName(file,mbrPN,cast);
 		if(exist==true){
-			fmt.Println("particion primaria o extendida con full");
 			file.Seek( -34, io.SeekCurrent );	
 			var pt_type byte;
 			err := binary.Read(file, binary.LittleEndian, &pt_type)
 			CheckBR(err);	  
-			fmt.Println(file.Seek( -2, io.SeekCurrent ));
+			file.Seek( -2, io.SeekCurrent );
 			er:=binary.Write(file, binary.LittleEndian, &p_errase)  
 			CheckBR(er); 
-			fmt.Println(pt_type);
 			if(pt_type=='e'){
 				fi, err := file.Stat()
 				if err != nil {
@@ -906,7 +877,6 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 		if i != nil {
 			fmt.Println("error al agregar bytes");
 		}
-
 		binary.Read(file, binary.LittleEndian, &hasNext)
 		file.Seek(-1,io.SeekCurrent)
 		if(hasNext==0&&finalP<178){
@@ -921,13 +891,11 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 				}
 				if(hasNext!=0){
 					varaux= where -finalP;
-					fmt.Println("lets see if it works");
-					fmt.Println(varaux);
 					break;
 				}
 			}
 		}
-		fmt.Println(file.Seek(finalP+1,0));
+		file.Seek(finalP+1,0);
 		file.Seek(-33,io.SeekCurrent);
 		binary.Read(file, binary.LittleEndian, &byte_start)
 		if(hasNext==0||finalP==178){
@@ -952,7 +920,6 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 				binary.Write(file, binary.LittleEndian, &intTemp)
 				return;
 			}
-			fmt.Println("aqui");
 			fmt.Println("espacio insuficiente, no se pueden agregar tamaño");
 			return;
 		}else{
@@ -960,14 +927,12 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 			if e != nil {
 				fmt.Println("error al agregar bytes");
 			}
-			fmt.Println(file.Seek(27+varaux,io.SeekCurrent));
+			file.Seek(27+varaux,io.SeekCurrent);
 			var b_startN int64=0;
 			var size_n int64=0;
 			binary.Read(file, binary.LittleEndian, &b_startN)
 			file.Seek(sizeToChange,0);
 			binary.Read(file, binary.LittleEndian, &size_n)
-			fmt.Println(b_startN-byte_start);
-			fmt.Println(size_n+byteToAdd);
 			if(b_startN-byte_start>=size_n+byteToAdd){
 				if(size_n+byteToAdd<0){
 					fmt.Println("el tamaño de la particion no puede ser negativo");
@@ -990,7 +955,6 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 		if e != nil {
 			fmt.Println("error al agregar bytes");
 		}
-		fmt.Println(sizeToChange)
 		var b_startN int64=0;
 		var size_n int64=0;
 		binary.Read(file, binary.LittleEndian, &size_n)
@@ -1034,42 +998,59 @@ func addBytes(file *os.File,name string,byteToAdd int64){
 
 func ReporteMBR(id string, path string){
 	dir := strings.ReplaceAll(ReturnPath(id),"\"","");
-	fmt.Println(dir);
 	file, err := os.OpenFile("/"+dir, os.O_RDWR ,0666);
 	defer file.Close();
 	check(err);
-	fmt.Println("llego aca 123");
 	var hdrive MBR;
 	file.Seek(0,0);
 	e:=binary.Read(file, binary.LittleEndian, &hdrive)
 	if e != nil {
 		fmt.Println(err);
 	}
-	fmt.Println(hdrive);
 	var grafo string = "digraph test {\n graph [ratio=fill];\n node [label=\"\\N\", fontsize=15, shape=plaintext];\n graph [bb=\"0,0,352,154\"];\n arset [label=<\n"
 	grafo=grafo+"<TABLE ALIGN=\"LEFT\">\n"+Cabecera; 
 	grafo=grafo+tr0+"Mbr_tamano"+tr1+strconv.FormatUint(hdrive.Mbr_tamano+1,10)+tr2;
 	grafo=grafo+tr0+"Mbr_disk_signature"+tr1+strconv.FormatUint(hdrive.Mbr_disk_signature,10)+tr2;
-	grafo=grafo+tr0+"Mbr_fecha_creacion"+tr1+string(hdrive.Mbr_fecha_creacion[:len(hdrive.Mbr_fecha_creacion)])+tr2;
+	n := bytes.IndexByte(hdrive.Mbr_fecha_creacion[:], 0)
+	grafo=grafo+tr0+"Mbr_fecha_creacion"+tr1+string(hdrive.Mbr_fecha_creacion[:n])+tr2;
 	for i := 0; i < 4; i++{
+		if(hdrive. Mbr_partition[i].Part_status!='1'){
+			continue;
+		}
 		grafo=grafo+tr0+"Part_status_"+strconv.Itoa(i)+tr1+string(hdrive. Mbr_partition[i].Part_status)+tr2;
 		grafo=grafo+tr0+"Part_type_"+strconv.Itoa(i)+tr1+string(hdrive. Mbr_partition[i].Part_type)+tr2;
 		grafo=grafo+tr0+"Part_fit_"+strconv.Itoa(i)+tr1+string(hdrive. Mbr_partition[i].Part_fit)+tr2;
 		grafo=grafo+tr0+"Part_start_"+strconv.Itoa(i)+tr1+strconv.FormatUint(hdrive. Mbr_partition[i].Part_start,10)+tr2;
 		grafo=grafo+tr0+"Part_size_"+strconv.Itoa(i)+tr1+strconv.FormatUint(hdrive. Mbr_partition[i].Part_size,10)+tr2;
-		grafo=grafo+tr0+"Part_name_"+strconv.Itoa(i)+tr1+string(hdrive.Mbr_partition[i].Part_name[:len(hdrive.Mbr_partition[i].Part_name)])+tr2;
+		n = bytes.IndexByte(hdrive.Mbr_partition[i].Part_name[:], 0)
+		grafo=grafo+tr0+"Part_name_"+strconv.Itoa(i)+tr1+string(hdrive.Mbr_partition[i].Part_name[:n])+tr2;
 	}
-	grafo= grafo+"</TABLE>>, ];}"
-	fmt.Println(grafo);
+	grafo= grafo+"</TABLE>> ];}"
+	f, err := os.Create("test.txt")
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    l, err := f.WriteString(grafo)
+    if err != nil {
+        fmt.Println(err)
+        f.Close()
+        return
+    }
+    fmt.Println(l, "bytes written successfully")
+    err = f.Close()
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+	exec.Command("dot C:/Users/Asus/Desktop/test.txt -Tpng -O ").Output();
 }
 
 func ReporteDISK(id string, path string){
 	dir := strings.ReplaceAll(ReturnPath(id),"\"","");
-	fmt.Println(dir);
 	file, err := os.OpenFile("/"+dir, os.O_RDWR ,0666);
 	defer file.Close();
 	check(err);
-	fmt.Println("llego aca 123");
 	var hdrive MBR;
 	file.Seek(0,0);
 	e:=binary.Read(file, binary.LittleEndian, &hdrive)
@@ -1077,7 +1058,6 @@ func ReporteDISK(id string, path string){
 		fmt.Println(e);
 	}
 	var myList List_l;
-	fmt.Println(hdrive);
 	for i := 0; i < 4; i++{
 		if(hdrive. Mbr_partition[i].Part_type=='e'&&hdrive. Mbr_partition[i].Part_status=='1'){		
 			var auxE EPartition;
@@ -1093,13 +1073,11 @@ func ReporteDISK(id string, path string){
 				var auxint int64=42;
 				count:=0;
 				for true{
-					fmt.Println("ciclado aca")
 					file.Seek(ebrst+auxint,0);
 					k=binary.Read(file, binary.LittleEndian, &auxE)
 					if k != nil {
 						fmt.Println(k);
 					}
-					fmt.Println(auxE.Part_next)
 					if(auxE.Part_next==-1&&auxE.Part_status=='1'){
 						myList.Lista=append(myList.Lista,auxE);
 						break;
@@ -1118,7 +1096,6 @@ func ReporteDISK(id string, path string){
 			}
 		}
 	}
-	fmt.Println("llego aca")
 	var tamañoR int64=int64(hdrive.Mbr_tamano)+1-200;
 	var R_logicas string= " ";
     var grafo string = "digraph test {\n graph [ratio=fill];\n node [label=\"\\N\", fontsize=15, shape=plaintext];\n graph [bb=\"0,0,352,154\"];\n arset [label=<\n <TABLE ALIGN=\"LEFT\"><TR>"
@@ -1136,17 +1113,20 @@ func ReporteDISK(id string, path string){
 			porcentaje:= Percent(int64(hdrive. Mbr_partition[i].Part_size),tamañoR);
 			s := fmt.Sprintf("%.2f", porcentaje) 
 			R_logicas =  "<TD><TABLE><TR><TD>"
-			R_logicas = R_logicas +string(hdrive.Mbr_partition[i].Part_name[:len(hdrive.Mbr_partition[i].Part_name)])+" (EXTENDIDA) "+s+"%";
+			n := bytes.IndexByte(hdrive.Mbr_partition[i].Part_name[:], 0)
+			R_logicas = R_logicas +string(hdrive.Mbr_partition[i].Part_name[:n])+" (EXTENDIDA) "+s+"%";
 			R_logicas = R_logicas +"</TD></TR><TR><TD><TABLE><TR><TD>EBR</TD>"
 			if(len(myList.Lista)>0){
 				if(int64(hdrive. Mbr_partition[i].Part_start)+sizeOfEBR!= myList.Lista[0].Part_start||myList.Lista[0].Part_status==0){
 					R_logicas = R_logicas +"<TD>LIBRE: "+"</TD><TD>EBR</TD>";
 				}else{
-					R_logicas = R_logicas +"<TD>LOGICA: "+string(myList.Lista[0].Part_name[:len(myList.Lista[0].Part_name)])+"</TD><TD>EBR</TD>"
+					n = bytes.IndexByte(myList.Lista[0].Part_name[:], 0)
+					R_logicas = R_logicas +"<TD>LOGICA: "+string(myList.Lista[0].Part_name[:n])+"</TD><TD>EBR</TD>"
 				}
 				for j := 1; j < len(myList.Lista); j++{
 					if(myList.Lista[j].Part_status=='1'){
-						R_logicas = R_logicas +"<TD>LOGICA: "+string(myList.Lista[j].Part_name[:len(myList.Lista[j].Part_name)])+"</TD><TD>EBR</TD>"
+						n = bytes.IndexByte(myList.Lista[j].Part_name[:], 0)
+						R_logicas = R_logicas +"<TD>LOGICA: "+string(myList.Lista[j].Part_name[:n])+"</TD><TD>EBR</TD>"
 					}
 					if(myList.Lista[j].Part_start+myList.Lista[j].Part_size!=myList.Lista[j].Part_next&&myList.Lista[j].Part_next!=-1||myList.Lista[j].Part_status==0){
 						R_logicas = R_logicas +"<TD>LIBRE: "+"</TD><TD>EBR</TD>";
@@ -1159,6 +1139,11 @@ func ReporteDISK(id string, path string){
 			R_logicas = R_logicas +"</TR></TABLE></TD></TR></TABLE></TD>"
 			grafo=grafo+R_logicas;
 			emptySpace=int64(hdrive. Mbr_partition[i].Part_size)+int64(hdrive. Mbr_partition[i].Part_start);
+			if(i==checklast&&hdrive.Mbr_tamano!=hdrive.Mbr_partition[i].Part_start+hdrive.Mbr_partition[i].Part_size){
+				porcentaje:= Percent(int64(hdrive.Mbr_tamano-(hdrive. Mbr_partition[i].Part_start+hdrive. Mbr_partition[i].Part_size)),tamañoR);
+				s = fmt.Sprintf("%.2f", porcentaje) 
+				grafo=grafo+"<TD>LIBRE<br/> "+s+"%"+"</TD>"
+			}
 			continue;
 		}else if(hdrive. Mbr_partition[i].Part_status=='1'){
 			porcentaje:= Percent(int64(hdrive. Mbr_partition[i].Part_size),tamañoR);
@@ -1168,7 +1153,8 @@ func ReporteDISK(id string, path string){
 				s1:= fmt.Sprintf("%.2f", porcentaje1) 
 				grafo=grafo+"<TD>LIBRE<br/>"+s1+"%"+"</TD>"
 			}
-			grafo=grafo+"<TD>"+string(hdrive.Mbr_partition[i].Part_name[:len(hdrive.Mbr_partition[i].Part_name)])+"<br/>"+string(hdrive. Mbr_partition[i].Part_type)+" "+s+"%"+"</TD>";
+			n:= bytes.IndexByte(hdrive.Mbr_partition[i].Part_name[:], 0)
+			grafo=grafo+"<TD>"+string(hdrive.Mbr_partition[i].Part_name[:n])+"<br/>"+string(hdrive. Mbr_partition[i].Part_type)+" "+s+"%"+"</TD>";
 			if(i==checklast&&hdrive.Mbr_tamano!=hdrive.Mbr_partition[i].Part_start+hdrive.Mbr_partition[i].Part_size){
 				porcentaje:= Percent(int64(hdrive.Mbr_tamano-(hdrive. Mbr_partition[i].Part_start+hdrive. Mbr_partition[i].Part_size)),tamañoR);
 				s = fmt.Sprintf("%.2f", porcentaje) 
@@ -1178,8 +1164,34 @@ func ReporteDISK(id string, path string){
 		}
 
 	}
-	grafo=grafo+"</TR></TABLE>>, ];}";
-	fmt.Println(grafo);
+	grafo=grafo+"</TR></TABLE>> ];\n}";
+	dot:=strings.ReplaceAll(path,"\"","");
+	f, err := os.Create(strings.ReplaceAll("/"+dot,".png",""))
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    l, err := f.WriteString(grafo)
+    if err != nil {
+        fmt.Println(err)
+        f.Close()
+        return
+    }
+    fmt.Println(l, "bytes written successfully")
+    err = f.Close()
+    if err != nil {
+        fmt.Println(err)
+        return
+	}
+	comando:="C:/Program Files/Graphviz 2.44.1/bin/dot test -Tpng -O"
+	cmd:=exec.Command(comando);
+	stdout, err := cmd.Output()
+
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+	}
+	fmt.Print(string(stdout))
 }
 
 func Percent(percent int64, all int64) float64 {
